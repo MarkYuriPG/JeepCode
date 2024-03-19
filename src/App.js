@@ -3,64 +3,6 @@ import React, { useState } from 'react';
 import jeepImg from './image/jeep_lowExp.jpg';
 
 function App() {
-  const [jeepCodes, setJeepCodes] = useState('');
-  const [jeepRoutes, setJeepRoutes] = useState([]);
-
-  const handleChange = (event) => {
-    setJeepCodes(event.target.value);
-  };
-
-  const handleButtonClick = () => {
-    const enteredCodesArray = jeepCodes.split(',').map(code => code.trim());
-    const invalidCodes = enteredCodesArray.filter(code => !routes.hasOwnProperty(code));
-
-    if (invalidCodes.length > 0) {
-      alert(`Invalid Jeep code(s): ${invalidCodes.join(', ')}`);
-      return;
-    }
-
-    let routesForJeepCodes = [];
-    enteredCodesArray.forEach(code => {
-      if (routes.hasOwnProperty(code)) {
-        routesForJeepCodes.push({ code, places: routes[code] });
-      }
-    });
-
-    const commonRoutes = {};
-    routesForJeepCodes.forEach(route => {
-      route.places.forEach(place => {
-        if (!commonRoutes[place]) {
-          commonRoutes[place] = { codes: [route.code], color: getRandomColor() };
-        } else {
-          commonRoutes[place].codes.push(route.code);
-        }
-      });
-    });
-
-    const highlightedRoutes = routesForJeepCodes.map(route => {
-      const highlightedPlaces = route.places.map(place => {
-        const commonRoute = commonRoutes[place];
-        if (commonRoute.codes.length > 1) {
-          return `<span style="color: ${commonRoute.color}">${place}</span>`;
-        } else {
-          return place;
-        }
-      });
-      return `${route.code} => ${highlightedPlaces.join(' <-> ')}`;
-    });
-
-    setJeepRoutes(highlightedRoutes);
-  };
-
-  const getRandomColor = () => {
-    const letters = '89ABCDEF';
-    let color = '#';
-    for (let i = 0; i < 6; i++) {
-      color += letters[Math.floor(Math.random() * letters.length)];
-    }
-    return color;
-  };
-
   const routes = {
     '01A': ['Alpha', 'Bravo', 'Charlie', 'Echo', 'Golf'],
     '02B': ['Alpha', 'Delta', 'Echo', 'Foxtrot', 'Golf'],
@@ -80,6 +22,68 @@ function App() {
   }
 
   const validJeepCodes = Object.keys(routes);
+
+  const [jeepCodes, setJeepCodes] = useState('');
+  const [jeepRoutes, setJeepRoutes] = useState([]);
+  
+
+  const handleChange = (event) => {
+    setJeepCodes(event.target.value);
+  };
+
+  const handleGetRouteButtonClick = () => {
+    const enteredCodesArray = jeepCodes.split(',').map((code) => code.trim());
+    const uniqueCodesSet = new Set();// THIS IS TO PREVENT REPETITION OF INPUT
+    const routesForJeepCodes = [];
+
+    enteredCodesArray.forEach((code) => {
+      if (routes.hasOwnProperty(code) && !uniqueCodesSet.has(code)) {
+        uniqueCodesSet.add(code);
+        routesForJeepCodes.push({ code, places: routes[code] });
+      }
+    });
+
+    const commonRoutes = {};
+    routesForJeepCodes.forEach((route) => {
+      route.places.forEach((place) => {
+        if (!commonRoutes[place]) {
+          commonRoutes[place] = { codes: [route.code], color: getRandomColor() };
+        } else {
+          commonRoutes[place].codes.push(route.code);
+        }
+      });
+    });
+
+    const highlightedRoutes = routesForJeepCodes.map((route) => {
+      const highlightedPlaces = route.places.map((place) => {
+        const commonRoute = commonRoutes[place];
+        if (commonRoute.codes.length > 1) {
+          return `<span style="color: ${commonRoute.color}">${place}</span>`;
+        } else {
+          return place;
+        }
+      });
+      return `${route.code} => ${highlightedPlaces.join(' <-> ')}`;
+    });
+
+    setJeepRoutes(highlightedRoutes);
+    setJeepCodes('');
+  };
+
+  const handleClearButtonClick = () => {
+    setJeepRoutes([]);
+    setJeepCodes('');
+  };
+
+  const getRandomColor = () => {
+    const letters = '89ABCDEF';
+    let color = '#';
+    for (let i = 0; i < 6; i++) {
+      color += letters[Math.floor(Math.random() * letters.length)];
+    }
+    return color;
+  };
+
   const matrixSize = 5;
   const jeepCodeMatrix = [];
   for (let i = 0; i < validJeepCodes.length; i += matrixSize) {
@@ -131,31 +135,49 @@ function App() {
             marginBottom: '20px',
           }}
         />
-        <button
-          onClick={handleButtonClick}
-          style={{
-            width: '150px',
-            height: '40px',
-            fontSize: '20px',
-            backgroundColor: '#4CAF50',
-            color: 'white',
-            border: 'none',
-            cursor: 'pointer',
-          }}
-        >
-          Get Routes
-        </button>
         <div>
-          {jeepRoutes.length > 0 &&
-            <div>
-              <h2 style={{ color: 'white' }}>Routes:</h2>
-              <ul style={{ color: 'white', listStyleType: 'none', paddingLeft: 0, fontSize:'24px' }}>
-                {jeepRoutes.map((route, index) => (
-                  <li key={index} dangerouslySetInnerHTML={{ __html: route }}></li>
-                ))}
-              </ul>
-            </div>
-          }
+          <button
+            onClick={handleClearButtonClick}
+            style={{
+              width: '150px',
+              height: '40px',
+              fontSize: '20px',
+              backgroundColor: '#b22222',
+              color: 'white',
+              border: 'none',
+              cursor: 'pointer',
+              marginRight: '20px'
+
+            }}
+          >
+            Clear
+          </button>
+          <button
+            onClick={handleGetRouteButtonClick}
+            style={{
+              width: '150px',
+              height: '40px',
+              fontSize: '20px',
+              backgroundColor: '#4CAF50',
+              color: 'white',
+              border: 'none',
+              cursor: 'pointer',
+            }}
+          >
+            Get Routes
+          </button>
+        </div>
+        <div>
+        {jeepRoutes.length > 0 && (
+          <div style={{ maxHeight: '300px', overflowY: 'auto', color: 'white' }}>
+            <h2>Routes:</h2>
+            <ul style={{ listStyleType: 'none', paddingLeft: 0, fontSize: '24px' }}>
+              {jeepRoutes.map((route, index) => (
+                <li key={index} dangerouslySetInnerHTML={{ __html: route }}></li>
+              ))}
+            </ul>
+          </div>
+        )}
         </div>
       </div>
     </div>
