@@ -33,37 +33,49 @@ function App() {
 
   const handleGetRouteButtonClick = () => {
     const enteredCodesArray = jeepCodes.split(',').map((code) => code.trim());
-    const uniqueCodesSet = new Set();// THIS IS TO PREVENT REPETITION OF INPUT
-    const routesForJeepCodes = [];
+    const uniqueCodesSet = new Set(enteredCodesArray);
 
-    enteredCodesArray.forEach((code) => {
-      if (routes.hasOwnProperty(code) && !uniqueCodesSet.has(code)) {
-        uniqueCodesSet.add(code);
-        routesForJeepCodes.push({ code, places: routes[code] });
-      }
-    });
+    // Step 2: Check for Invalid Codes
+    const invalidCodes = enteredCodesArray.filter((code) => !routes.hasOwnProperty(code));
+    if (invalidCodes.length > 0) {
+      alert(`Invalid Jeep code(s): ${invalidCodes.join(', ')}`);
+      return;
+    }
 
-    const commonRoutes = {};
-    routesForJeepCodes.forEach((route) => {
-      route.places.forEach((place) => {
-        if (!commonRoutes[place]) {
-          commonRoutes[place] = { codes: [route.code], color: getRandomColor() };
+    // Step 3: Process Unique Codes and Generate Highlighted Routes
+    const commonPlaces = {};
+    const colors = {};
+    const codesColors = {};
+    const highlightedRoutes = [];
+
+    uniqueCodesSet.forEach((code) => { // Iterate over unique codes
+      routes[code].forEach((place) => {
+        if (!commonPlaces[place]) {
+          commonPlaces[place] = [code];
+          colors[place] = getRandomColor();
         } else {
-          commonRoutes[place].codes.push(route.code);
+          commonPlaces[place].push(code);
+          if (commonPlaces[place].length > 1) {
+            const commonCodes = commonPlaces[place].sort().join('-');
+            if (!codesColors[commonCodes]) {
+              codesColors[commonCodes] = getRandomColor();
+              commonPlaces[place].forEach((c) => {
+                colors[c] = codesColors[commonCodes];
+              });
+            }
+          }
         }
       });
     });
 
-    const highlightedRoutes = routesForJeepCodes.map((route) => {
-      const highlightedPlaces = route.places.map((place) => {
-        const commonRoute = commonRoutes[place];
-        if (commonRoute.codes.length > 1) {
-          return `<span style="color: ${commonRoute.color}">${place}</span>`;
-        } else {
-          return place;
-        }
+    uniqueCodesSet.forEach((code) => { // Iterate over unique codes
+      const places = routes[code];
+      const highlightedPlaces = places.map((place) => {
+        const pair = commonPlaces[place].sort().join('-');
+        const color = codesColors[pair] || 'white';
+        return `<span style="color: ${color}">${place}</span>`;
       });
-      return `${route.code} => ${highlightedPlaces.join(' <-> ')}`;
+      highlightedRoutes.push(`${code} => ${highlightedPlaces.join(' <-> ')}`);
     });
 
     setJeepRoutes(highlightedRoutes);
@@ -76,12 +88,32 @@ function App() {
   };
 
   const getRandomColor = () => {
-    const letters = '89ABCDEF';
-    let color = '#';
-    for (let i = 0; i < 6; i++) {
-      color += letters[Math.floor(Math.random() * letters.length)];
-    }
+    let r, g, b;
+    do {
+        r = Math.floor(Math.random() * 256);
+        g = Math.floor(Math.random() * 256);
+        b = Math.floor(Math.random() * 256);
+    } while (isBrownish(r, g, b) || isBlackish(r, g, b) || isGrayish(r, g, b));
+
+    // Convert RGB to hexadecimal format
+    const color = `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+
     return color;
+  };
+
+  const isBrownish = (r, g, b) => {
+    const brownThreshold = 200;
+    return r < brownThreshold && g < brownThreshold && b < brownThreshold;
+  };
+
+  const isBlackish = (r, g, b) => {
+      const blackThreshold = 200;
+      return r < blackThreshold && g < blackThreshold && b < blackThreshold;
+  };
+
+  const isGrayish = (r, g, b) => {
+      const grayThreshold = 200;
+      return Math.abs(r - g) < grayThreshold && Math.abs(g - b) < grayThreshold && Math.abs(b - r) < grayThreshold;
   };
 
   const matrixSize = 5;
@@ -121,15 +153,16 @@ function App() {
           justifyContent: 'center',
           alignItems: 'center',
         }}>
-        <h1 style={{ color: 'white' }}>Enter Jeep Codes (Separated by commas)</h1>
+        <h1 style={{ color: 'white' }}>Enter Jeep Codes</h1>
         <input
           type="text"
           value={jeepCodes}
           onChange={handleChange}
+          placeholder="(e.g., 01A,02B,03C)"
           style={{
             width: '300px',
             height: '40px',
-            fontSize: '24px',
+            fontSize: '16px',
             padding: '8px',
             marginBottom: '20px',
           }}
