@@ -5,7 +5,6 @@ import jeepImg from './image/jeep_lowExp.jpg';
 function App() {
   const [jeepCodes, setJeepCodes] = useState('');
   const [jeepRoutes, setJeepRoutes] = useState([]);
-  const [overlayOpacity, setOverlayOpacity] = useState(0.5);
 
   const handleChange = (event) => {
     setJeepCodes(event.target.value);
@@ -27,22 +26,22 @@ function App() {
       }
     });
 
-    const commonPlaces = {};
+    const commonRoutes = {};
     routesForJeepCodes.forEach(route => {
       route.places.forEach(place => {
-        if (!commonPlaces[place]) {
-          commonPlaces[place] = { codes: [route.code], color: getRandomColor() };
+        if (!commonRoutes[place]) {
+          commonRoutes[place] = { codes: [route.code], color: getRandomColor() };
         } else {
-          commonPlaces[place].codes.push(route.code);
+          commonRoutes[place].codes.push(route.code);
         }
       });
     });
 
     const highlightedRoutes = routesForJeepCodes.map(route => {
       const highlightedPlaces = route.places.map(place => {
-        const commonPlace = commonPlaces[place];
-        if (commonPlace.codes.length > 1) {
-          return `<span style="color: ${commonPlace.color}">${place}</span>`;
+        const commonRoute = commonRoutes[place];
+        if (commonRoute.codes.length > 1) {
+          return `<span style="color: ${commonRoute.color}">${place}</span>`;
         } else {
           return place;
         }
@@ -80,6 +79,13 @@ function App() {
     '42D': ['Juliet', 'November', 'Oscar', 'Quebec', 'Romeo'],
   }
 
+  const validJeepCodes = Object.keys(routes);
+  const matrixSize = 5;
+  const jeepCodeMatrix = [];
+  for (let i = 0; i < validJeepCodes.length; i += matrixSize) {
+    jeepCodeMatrix.push(validJeepCodes.slice(i, i + matrixSize));
+  }
+
   return (
     <div className="App"
       style={{
@@ -93,44 +99,64 @@ function App() {
         justifyContent: 'center',
         alignItems: 'center',
       }}>
-      <h1 style={{ color: 'white' }}>Enter Jeep Codes (Separate by commas)</h1>
-      <input
-        type="text"
-        value={jeepCodes}
-        onChange={handleChange}
-        style={{
-          width: '300px',
-          height: '40px',
-          fontSize: '24px',
-          padding: '8px',
-          marginBottom: '20px',
-        }}
-      />
-      <button
-        onClick={handleButtonClick}
-        style={{
-          width: '150px',
-          height: '40px',
-          fontSize: '20px',
-          backgroundColor: '#4CAF50',
-          color: 'white',
-          border: 'none',
-          cursor: 'pointer',
-        }}
-      >
-        Get Routes
-      </button>
-      <div>
-        {jeepRoutes.length > 0 &&
-          <div>
-            <h2 style={{ color: 'white', fontSize:'32px'}}>Routes:</h2>
-            <ul style={{ color: 'white', listStyleType: 'none', paddingLeft: 0, fontSize:'32px' }}>
-              {jeepRoutes.map((route, index) => (
-                <li key={index} dangerouslySetInnerHTML={{ __html: route }}></li>
-              ))}
-            </ul>
-          </div>
-        }
+        <h2 style={{ color: 'white' }}>Jeep Codes:</h2>
+        <table style={{ color: 'white', borderCollapse: 'collapse'}}>
+          <tbody>
+            {jeepCodeMatrix.map((row, rowIndex) => (
+              <tr key={rowIndex}>
+                {row.map((code, columnIndex) => (
+                  <td key={columnIndex} style={{ border: '1px solid white', padding: '8px' }}>{code}</td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      <div style={{ 
+          flex: 1 ,
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}>
+        <h1 style={{ color: 'white' }}>Enter Jeep Codes (Separated by commas)</h1>
+        <input
+          type="text"
+          value={jeepCodes}
+          onChange={handleChange}
+          style={{
+            width: '300px',
+            height: '40px',
+            fontSize: '24px',
+            padding: '8px',
+            marginBottom: '20px',
+          }}
+        />
+        <button
+          onClick={handleButtonClick}
+          style={{
+            width: '150px',
+            height: '40px',
+            fontSize: '20px',
+            backgroundColor: '#4CAF50',
+            color: 'white',
+            border: 'none',
+            cursor: 'pointer',
+          }}
+        >
+          Get Routes
+        </button>
+        <div>
+          {jeepRoutes.length > 0 &&
+            <div>
+              <h2 style={{ color: 'white' }}>Routes:</h2>
+              <ul style={{ color: 'white', listStyleType: 'none', paddingLeft: 0, fontSize:'24px' }}>
+                {jeepRoutes.map((route, index) => (
+                  <li key={index} dangerouslySetInnerHTML={{ __html: route }}></li>
+                ))}
+              </ul>
+            </div>
+          }
+        </div>
       </div>
     </div>
   );
